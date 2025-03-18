@@ -15,27 +15,17 @@
  ******************************************************************************/
 package au.gov.ga.worldwind.tiler.ribbon;
 
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import au.gov.ga.worldwind.tiler.ribbon.definition.LayerDefinitionCreator;
+import au.gov.ga.worldwind.tiler.util.Util;
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-
-import javax.imageio.ImageIO;
-
-import org.gdal.gdal.Dataset;
-
-import au.gov.ga.worldwind.tiler.gdal.GDALTile;
-import au.gov.ga.worldwind.tiler.gdal.GDALTileParameters;
-import au.gov.ga.worldwind.tiler.gdal.GDALUtil;
-import au.gov.ga.worldwind.tiler.ribbon.definition.LayerDefinitionCreator;
-import au.gov.ga.worldwind.tiler.util.Util;
-
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
 
 /**
  * A tiler that is used to process long, thin images for use in
@@ -46,7 +36,6 @@ import com.beust.jcommander.ParameterException;
  */
 public class RibbonTiler {
     public static void main(String[] args) throws Exception {
-        GDALUtil.init();
         RibbonTilingContext context = new RibbonTilingContext();
         JCommander jCommander = null;
         try {
@@ -70,10 +59,10 @@ public class RibbonTiler {
         log(context, "Source: " + context.getSourceFile().getAbsolutePath(), true);
         log(context, "", true);
 
-        Dataset dataset = GDALUtil.open(context.getSourceFile());
+        BufferedImage dataset = ImageIO.read(context.getSourceFile());
+        int width = dataset.getWidth() - context.getInsets().left - context.getInsets().right;
+        int height = dataset.getHeight() - context.getInsets().top - context.getInsets().bottom;
 
-        int width = dataset.GetRasterXSize() - context.getInsets().left - context.getInsets().right;
-        int height = dataset.GetRasterYSize() - context.getInsets().top - context.getInsets().bottom;
         context.setSourceImageSize(new Dimension(width, height));
 
         int levels = levelCount(width, height, context.getTilesize());
@@ -105,9 +94,7 @@ public class RibbonTiler {
                     //get an image of the full height, 1 pixel wide at column x
                     Rectangle src =
                         new Rectangle(context.getInsets().left + startX, context.getInsets().top, w, height);
-                    GDALTileParameters parameters = new GDALTileParameters(dataset, src.getSize(), src);
-                    GDALTile tile = new GDALTile(parameters);
-                    BufferedImage image = tile.getAsImage();
+                    BufferedImage image = dataset.getSubimage(src.x, src.y, src.width, src.height);
 
                     log(context, (100 * (startX + 1) / width) + "% done", false);
 
@@ -171,9 +158,7 @@ public class RibbonTiler {
                 int w = Math.min(context.getTilesize() * yStrips / xStrips, width - x);
 
                 Rectangle src = new Rectangle(x + context.getInsets().left, y + context.getInsets().top, w, h);
-                GDALTileParameters parameters = new GDALTileParameters(dataset, src.getSize(), src);
-                GDALTile tile = new GDALTile(parameters);
-                BufferedImage image = tile.getAsImage();
+                BufferedImage image = dataset.getSubimage(src.x, src.y, src.width, src.height);
 
                 if (context.isRemoveConstantColumns()) {
                     image =
