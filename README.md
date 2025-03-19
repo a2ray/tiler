@@ -41,7 +41,16 @@ Tiling of vector data is performed by Mapnik. Most of the styling options are co
 1. Execute the `Run` target of the Ant build script (build.xml)
 2. Once complete, navigate to the `%PROJECT_HOME%\target\executable` directory and copy its contents to a desired install location
 3. Launch the `gui.bat` script (or alternatively use the CLI `console.bat`)
+- Note as of 19/03/2025, from Callum
+```
+In this repository the Tiler is setup to use the Apache Maven build tool:
+https://maven.apache.org/
 
+Once you've got Maven you can compile it by running the following command from the same directory as "pom.xml"
+mvn clean compile assembly:single
+
+You'll find the tiler-jar-with-dependencies.jar file in the "target" directory once the build is complete.
+```
 ## License ##
 
 The `Tiler` project is released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html) open source license.
